@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>공작물 축조신고 · 개발행위허가 판정기</title>
+<style>
+  :root{
+    --ink:#1b2a41;
+    --paper:#f7f5f0;
+    --line:#c9c3b6;
+    --stamp:#b3282d;
+    --seal:#0f5132;
+    --warn:#8a6d00;
+    --accent:#14507a;
+    --mono:'Courier New', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+    background:var(--paper); color:var(--ink);
+    background-image:repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(27,42,65,.04) 32px);
+    line-height:1.6; padding:24px 12px 60px;
+  }
+  .sheet{max-width:900px; margin:0 auto; background:#fff; border:2px solid var(--ink); box-shadow:6px 6px 0 rgba(27,42,65,.12);}
+  header{border-bottom:2px solid var(--ink); padding:26px 30px 18px; position:relative;}
+  .doc-no{font-family:var(--mono); font-size:12px; letter-spacing:1px; color:#777;}
+  h1{font-size:24px; letter-spacing:2px; margin-top:6px;}
+  h1 small{font-size:13px; font-weight:400; letter-spacing:0; display:block; color:#555; margin-top:4px;}
+  .stamp-box{
+    position:absolute; right:26px; top:22px; width:74px; height:74px;
+    border:3px double var(--stamp); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    color:var(--stamp); font-size:11px; font-weight:700; transform:rotate(-8deg); opacity:.85;
+  }
+  /* 탭 */
+  .tabs{display:flex; border-bottom:2px solid var(--ink); background:#fdfcf9;}
+  .tab{flex:1; text-align:center; padding:12px 6px; font-weight:700; font-size:14px; letter-spacing:2px; cursor:pointer; color:#888; border-right:1px solid var(--line);}
+  .tab:last-child{border-right:none;}
+  .tab.on{background:var(--ink); color:#fff;}
+  main{padding:26px 30px;}
+  fieldset{border:1px solid var(--line); padding:18px 20px 20px; margin-bottom:22px; background:#fdfcf9;}
+  legend{font-weight:700; font-size:14px; padding:0 10px; letter-spacing:1px; background:var(--ink); color:#fff;}
+  label{display:block; font-size:13px; font-weight:700; margin:12px 0 4px;}
+  label .req{color:var(--stamp);}
+  select, input[type=number], input[type=text]{
+    width:100%; padding:9px 10px; font-size:14px; border:1px solid var(--line);
+    background:#fff; color:var(--ink); font-family:inherit;
+  }
+  select:focus, input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:0 18px;}
+  @media (max-width:640px){ .grid2{grid-template-columns:1fr;} }
+  .hint{font-size:11.5px; color:#777; font-weight:400; margin-top:2px;}
+  .btn-row{text-align:center; margin:6px 0 4px;}
+  button{
+    font-family:inherit; font-size:16px; font-weight:700; letter-spacing:4px;
+    padding:13px 46px; background:var(--ink); color:#fff; border:none; cursor:pointer;
+    box-shadow:4px 4px 0 rgba(27,42,65,.25); transition:transform .06s;
+  }
+  button:hover{transform:translate(-1px,-1px);}
+  button:active{transform:translate(2px,2px); box-shadow:none;}
+  button.small{font-size:12px; letter-spacing:1px; padding:7px 16px; box-shadow:2px 2px 0 rgba(27,42,65,.25);}
+  button.danger{background:var(--stamp);}
+  #result{margin-top:26px; display:none;}
+  .verdict{border:2px solid var(--ink); margin-bottom:16px;}
+  .verdict-head{padding:10px 16px; font-weight:700; letter-spacing:2px; font-size:14px; color:#fff; display:flex; justify-content:space-between; align-items:center;}
+  .verdict-body{padding:14px 18px; font-size:14px; background:#fff;}
+  .v-need .verdict-head{background:var(--stamp);}
+  .v-ok .verdict-head{background:var(--seal);}
+  .v-warn .verdict-head{background:var(--warn);}
+  .badge{font-size:20px; font-weight:900; border:2px solid currentColor; padding:1px 12px; transform:rotate(-4deg); background:rgba(255,255,255,.15);}
+  .law{font-size:12.5px; background:#f4f7fa; border-left:4px solid var(--accent); padding:10px 14px; margin-top:10px;}
+  .law b{color:var(--accent);}
+  ul.docs{margin:8px 0 4px 18px; font-size:13px;}
+  ul.docs li{margin-bottom:4px;}
+  a{color:var(--accent);}
+  .linkbox{font-size:12.5px; margin-top:10px; border-top:1px dashed var(--line); padding-top:10px;}
+  .linkbox a{display:block; margin-bottom:3px; word-break:break-all;}
+  .caution{font-size:12px; color:#8a3b00; background:#fff6ec; border:1px dashed #d9a05b; padding:10px 14px; margin-top:14px;}
+  footer{border-top:2px solid var(--ink); padding:16px 30px; font-size:11.5px; color:#666; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;}
+  footer .lic b{color:var(--stamp);}
+  .flow{font-size:12px; color:#555; border:1px solid var(--line); padding:10px 14px; margin-bottom:20px; background:#fdfcf9;}
+  .flow b{color:var(--ink);}
+  /* 데이터 시트 */
+  table.data{width:100%; border-collapse:collapse; font-size:12px; margin-top:12px;}
+  table.data th, table.data td{border:1px solid var(--line); padding:5px 6px; text-align:center;}
+  table.data th{background:var(--ink); color:#fff; font-weight:700; letter-spacing:1px;}
+  table.data td input{padding:4px 5px; font-size:12px; text-align:center;}
+  table.data td input[type=text]{text-align:left;}
+  table.data tr:nth-child(even){background:#fbfaf7;}
+  .col-name{min-width:130px;}
+  .sheet-note{font-size:11.5px; color:#777; margin-top:8px;}
+  .tabpage{display:none;}
+  .tabpage.on{display:block;}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <div class="doc-no">참고자료 · 제2026-공작물-02호 (개정판)</div>
+    <h1>공작물 축조신고 · 개발행위허가 판정기
+      <small>건축법 시행령 제118조 제1항 및 국토계획법 시행령 제53조 · 각 시군구 도시계획조례 기준</small>
+    </h1>
+    <div class="stamp-box">사전<br>자가진단용</div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab on" onclick="showTab(0)">판정하기</div>
+    <div class="tab" onclick="showTab(1)">지역 기준 데이터 관리</div>
+  </div>
+
+  <!-- ══════════ 탭 1 : 판정 ══════════ -->
+  <main class="tabpage on" id="page0">
+    <div class="flow">
+      <b>판정 순서</b> — ① 공작물이 「건축법 시행령」 제118조 제1항 각 호에 해당하는지(축조신고) 확인
+      → ② 해당하면 「국토계획법 시행령」 제53조 제2호 단서에 따라 개발행위허가도 자동으로 대상
+      → ③ 해당하지 않으면 지자체 도시계획조례의 경미한 행위 기준(무게·부피·수평투영면적, 제주는 높이·면적)과 비교하여 개발행위허가 여부를 판단합니다.
+      지구단위계획구역에서는 허가가 면제되더라도 지구단위계획 적합 의무가 남습니다.
+    </div>
+
+    <fieldset>
+      <legend>① 대상지 정보</legend>
+      <div class="grid2">
+        <div>
+          <label>지자체 <span class="req">*</span></label>
+          <select id="region"></select>
+          <div class="hint">인천 자치구·군은 인천광역시 도시계획 조례가 공통 적용됩니다. 목록에 없는 지역은 [지역 기준 데이터 관리] 탭에서 추가하십시오.</div>
+        </div>
+        <div>
+          <label>용도지역 구분 <span class="req">*</span></label>
+          <select id="zone">
+            <option value="urban">도시지역 또는 지구단위계획구역</option>
+            <option value="rural">그 외 지역 (관리·농림 등 비도시)</option>
+          </select>
+          <div class="hint">토지이음(eum.go.kr)에서 지번으로 확인 가능</div>
+        </div>
+      </div>
+      <label style="margin-top:14px">
+        <input type="checkbox" id="districtPlan" style="width:auto"> 지구단위계획구역에 해당함
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>② 공작물 정보</legend>
+      <label>공작물 종류 <span class="req">*</span></label>
+      <select id="kind">
+        <option value="chimney" data-th="6" data-name="굴뚝" data-ho="제1호">굴뚝</option>
+        <option value="tower" data-th="4" data-name="장식탑·기념탑·첨탑·광고탑·광고판" data-ho="제3호">장식탑 · 기념탑 · 첨탑 · 광고탑 · 광고판</option>
+        <option value="tank" data-th="8" data-name="고가수조" data-ho="제4호">고가수조 및 이와 비슷한 것</option>
+        <option value="wall" data-th="2" data-name="옹벽 또는 담장" data-ho="제5호">옹벽 또는 담장</option>
+        <option value="shelter" data-th="-1" data-name="지하 대피호" data-ho="제6호">지하 대피호 (바닥면적 30제곱미터 기준)</option>
+        <option value="steel" data-th="6" data-name="운동시설용 철탑·통신용 철탑" data-ho="제7호">골프연습장 등 운동시설용 철탑 · 통신용 철탑</option>
+        <option value="parking" data-th="0" data-name="기계식·철골 조립식 주차장(외벽 없음)" data-ho="제8호">기계식 · 철골 조립식 주차장 (외벽 없는 것)</option>
+        <option value="solar" data-th="5" data-name="태양광 발전설비(비슷한 구조물 태양열)" data-ho="제11호" selected>태양광 발전설비 (비슷한 구조물 태양열)</option>
+        <option value="etc" data-th="99999" data-name="기타 공작물(데크·조형물·설비 등)" data-ho="해당 없음">기타 공작물 (제118조 제1항 미해당: 데크, 조형물, 소형설비 등)</option>
+      </select>
+      <div class="hint">제조·저장시설(제9호)·중량물(제10호)은 지자체 건축조례 확인 사항이라 본 판정기에서 제외했습니다.</div>
+
+      <div class="grid2">
+        <div>
+          <label>공작물의 높이 (m) <span class="req">*</span></label>
+          <input type="number" id="height" min="0" step="0.1" value="0">
+        </div>
+        <div>
+          <label>공작물의 수평투영면적 (㎡) <span class="req">*</span></label>
+          <input type="number" id="area" min="0" step="0.1" value="0">
+          <div class="hint">하늘에서 내려다본 면적. 지하대피호는 바닥면적 입력</div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div>
+          <label>공작물의 무게 (톤)</label>
+          <input type="number" id="weight" min="0" step="0.1" value="0">
+        </div>
+        <div>
+          <label>공작물의 부피 (㎥)</label>
+          <input type="number" id="volume" min="0" step="0.1" value="0">
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="btn-row"><button onclick="judge()">판 정</button></div>
+
+    <div id="result"></div>
+
+    <div class="caution">
+      ⚠ 본 판정기는 사전 자가진단용 참고자료이며 법률자문이 아닙니다. 조례는 수시 개정되므로 실제 인허가 전 반드시 국가법령정보센터에서 최신 시행본을 확인하고,
+      해당 시·군·구 허가부서(건축과·도시과)에 사전 문의하십시오. 개발제한구역·산지·농지·문화재구역 등 중첩규제는 별도 법령의 허가가 추가로 필요합니다.
+    </div>
+  </main>
+
+  <!-- ══════════ 탭 2 : 데이터 관리 ══════════ -->
+  <main class="tabpage" id="page1">
+    <div class="flow">
+      <b>지역 기준 데이터 시트</b> — 각 지자체 도시계획조례의 '경미한 행위(공작물 설치)' 면제 한도를 관리합니다.
+      수치를 직접 수정하거나 [지역 추가] 버튼으로 새 지자체를 등록하면 판정 탭에 즉시 반영됩니다.
+      빈칸은 '해당 기준 없음'을 의미합니다(예: 제주는 무게·부피 기준이 없음). 비도시 칸이 모두 비어 있으면 전역 도시지역으로 처리합니다.
+    </div>
+
+    <table class="data" id="dataTable">
+      <thead>
+        <tr>
+          <th rowspan="2" class="col-name">지자체명</th>
+          <th colspan="4">도시지역·지구단위계획구역</th>
+          <th colspan="4">그 외 지역(비도시)</th>
+          <th rowspan="2">확인<br>여부</th>
+          <th rowspan="2">삭제</th>
+        </tr>
+        <tr>
+          <th>무게(t)</th><th>부피(㎥)</th><th>수평투영<br>면적(㎡)</th><th>높이(m)</th>
+          <th>무게(t)</th><th>부피(㎥)</th><th>수평투영<br>면적(㎡)</th><th>높이(m)</th>
+        </tr>
+      </thead>
+      <tbody id="dataBody"></tbody>
+    </table>
+    <div class="sheet-note">
+      ※ 성남·인천은 수평투영면적이 20㎡로 강화, 포천은 높이 5m 요건 추가, 제주는 높이 15m + 면적 체계(무게·부피 없음). '확인여부'가 "확인필요"인 지역은 판정 시 경고가 함께 출력됩니다.<br>
+      ※ 본 시트의 수정 내용은 이 화면이 열려 있는 동안에만 유지됩니다(새로고침 시 기본값 복원). 영구 반영이 필요하면 파일 내 REGION_DATA를 직접 수정하십시오.
+    </div>
+
+    <div class="btn-row" style="margin-top:16px">
+      <button class="small" onclick="addRegion()">+ 지역 추가</button>
+      <button class="small danger" onclick="resetData()">기본값 복원</button>
+    </div>
+  </main>
+
+  <footer>
+    <div class="lic"><b>ⓒ 2026 Mark. All Rights Reserved.</b> 본 저작물의 무단 배포 · 복제 · 수정을 허용하지 않습니다.</div>
+    <div>기준일 2026.7. | 건축법 시행령 제118조 · 국토계획법 시행령 제53조</div>
+  </footer>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
